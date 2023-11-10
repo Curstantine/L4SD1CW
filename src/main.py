@@ -6,33 +6,34 @@ from utils import Status, get_status, get_yq_input, get_ranged_input
 MSG_EXIT_OR_ENTER = (
     "Would you like to enter another set of data, or quit and view results?"
 )
+LOG_PATH = "./log.txt"
 
 
 def main():
     CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
     statuses: List[Status] = []
-    credits: List[Tuple[int, int, int]] = []
 
-    while True:
-        try:
-            (status, credit) = round(CREDIT_RANGE)
-            statuses.append(status)
-            credits.append(credit)
+    with open(LOG_PATH, "w") as file:
+        while True:
+            try:
+                (status, credit) = round(CREDIT_RANGE)
+                statuses.append(status)
 
-            if not get_yq_input(MSG_EXIT_OR_ENTER):
-                break
-        except ValueError:
-            continue
-        except KeyboardInterrupt:
-            # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
-            return exit(0)
+                tuple_str = ", ".join(map(str, credit))
+                file.write(f"{status.get_message()} - {tuple_str}\n")
+
+                if not get_yq_input(MSG_EXIT_OR_ENTER):
+                    break
+            except ValueError:
+                continue
+            except KeyboardInterrupt:
+                # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
+                return exit(0)
 
     run_window(statuses)
 
-    for i, credit in enumerate(credits):
-        status = statuses[i]
-        tuple_str = ", ".join(map(str, credit))
-        print(f"{status.get_message()} - {tuple_str}")
+    with open(LOG_PATH, "r") as file:
+        print(file.read())
 
 
 def round(credit_range: List[int]) -> Tuple[Status, Tuple[int, int, int]]:
