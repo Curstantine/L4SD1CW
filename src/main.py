@@ -1,5 +1,5 @@
 from typing import List
-from graphics import GraphWin, Text, Point, GraphicsError, Line, Rectangle
+from graphics import GraphWin, Text, Point, GraphicsError, Rectangle
 from utils import Status, get_status, get_yq_input, get_ranged_input
 
 
@@ -18,6 +18,8 @@ def main():
             statuses.append(status)
             if not get_yq_input(MSG_EXIT_OR_ENTER):
                 break
+        except ValueError:
+            continue
         except KeyboardInterrupt:
             # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
             return exit(0)
@@ -35,7 +37,7 @@ def round(credit_range: List[int]) -> Status:
 
     if total != 120:
         print(f"The total is incorrect. Expected 120, but got {total}!", end="\n\n")
-        return True
+        raise ValueError
 
     status = get_status(inp_pass, inp_defer, inp_fail)
     print(f"Status: {status.get_message()}", end="\n\n")
