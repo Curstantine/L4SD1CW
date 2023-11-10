@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 from graphics import GraphWin, Text, Point, GraphicsError, Rectangle
 from utils import Status, get_status, get_yq_input, get_ranged_input
 
@@ -11,11 +11,14 @@ MSG_EXIT_OR_ENTER = (
 def main():
     CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
     statuses: List[Status] = []
+    credits: List[Tuple[int, int, int]] = []
 
     while True:
         try:
-            status = round(CREDIT_RANGE)
+            (status, credit) = round(CREDIT_RANGE)
             statuses.append(status)
+            credits.append(credit)
+
             if not get_yq_input(MSG_EXIT_OR_ENTER):
                 break
         except ValueError:
@@ -26,8 +29,13 @@ def main():
 
     run_window(statuses)
 
+    for i, credit in enumerate(credits):
+        status = statuses[i]
+        tuple_str = ", ".join(map(str, credit))
+        print(f"{status.get_message()} - {tuple_str}")
 
-def round(credit_range: List[int]) -> Status:
+
+def round(credit_range: List[int]) -> Tuple[Status, Tuple[int, int, int]]:
     """Initiates a round and returns a boolean describing whether to run another round or not."""
 
     inp_pass = get_ranged_input("Please enter the credits at pass", credit_range)
@@ -42,7 +50,7 @@ def round(credit_range: List[int]) -> Status:
     status = get_status(inp_pass, inp_defer, inp_fail)
     print(f"Status: {status.get_message()}", end="\n\n")
 
-    return status
+    return (status, (inp_pass, inp_defer, inp_fail))
 
 
 def run_window(statuses: List[Status]):
@@ -114,7 +122,7 @@ def run_window(statuses: List[Status]):
             win.getMouse()
         # The graphic error here is referring to the window close button
         except GraphicsError:
-            exit(0)
+            break
 
 
 if __name__ == "__main__":
