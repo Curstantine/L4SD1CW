@@ -6,25 +6,33 @@ from utils import Status, get_status, get_yq_input, get_ranged_input
 MSG_EXIT_OR_ENTER = (
     "Would you like to enter another set of data, or quit and view results?"
 )
+MSG_SESSION_SELECTION = "Start session as a student (0) or as a staff member (1)"
 
 
 def main():
     CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
     statuses: List[Status] = []
 
+    is_student_session = get_ranged_input(MSG_SESSION_SELECTION, [0, 1]) == 0
+
     while True:
         try:
-            status = round(CREDIT_RANGE)
-            statuses.append(status)
-            if not get_yq_input(MSG_EXIT_OR_ENTER):
+            if is_student_session:
+                round(CREDIT_RANGE)
                 break
+            else:
+                status = round(CREDIT_RANGE)
+                statuses.append(status)
+                if not get_yq_input(MSG_EXIT_OR_ENTER):
+                    break
         except ValueError:
             continue
         except KeyboardInterrupt:
             # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
             return exit(0)
 
-    run_window(statuses)
+    if not is_student_session:
+        run_window(statuses)
 
 
 def round(credit_range: List[int]) -> Status:
