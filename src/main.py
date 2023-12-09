@@ -3,14 +3,43 @@ from graphics import GraphWin, Text, Point, GraphicsError, Rectangle
 from utils import Status, get_status, get_yq_input, get_ranged_input
 
 
+LOG_PATH = "./log.txt"
+CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
+MSG_SESSION_SELECTION = "Start session as a student (0) or as a staff member (1)"
 MSG_EXIT_OR_ENTER = (
     "Would you like to enter another set of data, or quit and view results?"
 )
-LOG_PATH = "./log.txt"
 
 
 def main():
-    CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
+    is_student_session = get_ranged_input(MSG_SESSION_SELECTION, [0, 1]) == 0
+
+    # Exit early if its a student session.
+    if is_student_session:
+        run_student_round()
+        return exit(0)
+
+    statuses = run_staff_round()
+    run_window(statuses)
+
+    file = open(LOG_PATH, "r")
+    print(file.read())
+    file.close()
+
+
+def run_student_round():
+    while True:
+        try:
+            round(CREDIT_RANGE)
+            break
+        except ValueError:
+            continue
+        except KeyboardInterrupt:
+            # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
+            return exit(0)
+
+
+def run_staff_round() -> List[Status]:
     statuses: List[Status] = []
 
     with open(LOG_PATH, "w") as file:
@@ -20,7 +49,7 @@ def main():
                 statuses.append(status)
 
                 tuple_str = ", ".join(map(str, credit))
-                file.write(f"{status.get_message()} - {tuple_str}\n")
+                file.write(f"{len(statuses)}. {status.get_message()} - {tuple_str}\n")
 
                 if not get_yq_input(MSG_EXIT_OR_ENTER):
                     break
@@ -30,10 +59,7 @@ def main():
                 # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
                 return exit(0)
 
-    run_window(statuses)
-
-    with open(LOG_PATH, "r") as file:
-        print(file.read())
+    return statuses
 
 
 def round(credit_range: List[int]) -> Tuple[Status, Tuple[int, int, int]]:
