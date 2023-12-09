@@ -1,41 +1,68 @@
-from typing import List
+from typing import List, Tuple
 from graphics import GraphWin, Text, Point, GraphicsError, Rectangle
 from utils import Status, get_status, get_yq_input, get_ranged_input
 
 
+LOG_PATH = "./log.txt"
+CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
+MSG_SESSION_SELECTION = "Start session as a student (0) or as a staff member (1)"
 MSG_EXIT_OR_ENTER = (
     "Would you like to enter another set of data, or quit and view results?"
 )
-MSG_SESSION_SELECTION = "Start session as a student (0) or as a staff member (1)"
 
 
 def main():
-    CREDIT_RANGE = [0, 20, 40, 60, 80, 100, 120]
-    statuses: List[Status] = []
-
     is_student_session = get_ranged_input(MSG_SESSION_SELECTION, [0, 1]) == 0
 
+    # Exit early if its a student session.
+    if is_student_session:
+        run_student_round()
+        return exit(0)
+
+    statuses = run_staff_round()
+    run_window(statuses)
+
+    file = open(LOG_PATH, "r")
+    print(file.read())
+    file.close()
+
+
+def run_student_round():
     while True:
         try:
-            if is_student_session:
-                round(CREDIT_RANGE)
-                break
-            else:
-                status = round(CREDIT_RANGE)
-                statuses.append(status)
-                if not get_yq_input(MSG_EXIT_OR_ENTER):
-                    break
+            round(CREDIT_RANGE)
+            break
         except ValueError:
             continue
         except KeyboardInterrupt:
             # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
             return exit(0)
 
-    if not is_student_session:
-        run_window(statuses)
+
+def run_staff_round() -> List[Status]:
+    statuses: List[Status] = []
+
+    with open(LOG_PATH, "w") as file:
+        while True:
+            try:
+                (status, credit) = round(CREDIT_RANGE)
+                statuses.append(status)
+
+                tuple_str = ", ".join(map(str, credit))
+                file.write(f"{len(statuses)}. {status.get_message()} - {tuple_str}\n")
+
+                if not get_yq_input(MSG_EXIT_OR_ENTER):
+                    break
+            except ValueError:
+                continue
+            except KeyboardInterrupt:
+                # We have to account for keyboard interruptions like ctrl + c without throwing an exception.
+                return exit(0)
+
+    return statuses
 
 
-def round(credit_range: List[int]) -> Status:
+def round(credit_range: List[int]) -> Tuple[Status, Tuple[int, int, int]]:
     """Initiates a round and returns a boolean describing whether to run another round or not."""
 
     inp_pass = get_ranged_input("Please enter the credits at pass", credit_range)
@@ -50,7 +77,7 @@ def round(credit_range: List[int]) -> Status:
     status = get_status(inp_pass, inp_defer, inp_fail)
     print(f"Status: {status.get_message()}", end="\n\n")
 
-    return status
+    return (status, (inp_pass, inp_defer, inp_fail))
 
 
 def run_window(statuses: List[Status]):
@@ -122,7 +149,7 @@ def run_window(statuses: List[Status]):
             win.getMouse()
         # The graphic error here is referring to the window close button
         except GraphicsError:
-            exit(0)
+            break
 
 
 if __name__ == "__main__":
